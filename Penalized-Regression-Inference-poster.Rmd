@@ -1,0 +1,309 @@
+---
+title: "Penalized regression inference regarding variable selection in regular and high dimensions: comparison of selected methods implemented in R"
+author: "Marta Karas <mkaras@iu.edu>, <marta.karass@gmail.com>"
+date: "Oct 13, 2016"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+
+
+# INTRODUCTION
+
+## Association between an outcome variable and predictors 
+
+Suppose we are interested in the association between an outcome variable $y \in \mathbb{R}^n$ and a set of predictors $x_j \in \mathbb{R}^n$, $j = 1,...,p$. In order to assess this we might consider the model $$\mathbf{y=X\beta+\epsilon },$$ where $\mathbf{X} = [\mathbf{x}_1, . . . , \mathbf{x}_p] \in \mathbb{R}^{n \times p}$, $\mathbf{\beta} \in \mathbb{R}^p$ is vector of coefficients, and $\mathbf{\epsilon} \in \mathbb{R}^n$ is a vector of errors with mean zero and constant variance.
+
+As pointed in [1], if the number of variables $p$ is much smaller than $n$, we could perform a formal statistical test for whether an element of $\mathbf{\beta}$ is zero using classical methods, such as likelihood ratio or Wald test. However, in the high-dimensional setting, when the number of variables $p$ is large, these tests have low power, or are undefined.
+
+## Penalized regression techniques 
+
+In the case where $p$ is large, penalized regression techniques can be employed. Most commonly used ones are the Lasso and Ridge regression, which provide the following form of $\mathbf{\beta}$ estimates, respectively: 
+$$\widehat{\mathbf{\beta }}_{\lambda, Lasso} = \underset{b \in \mathbb{R}^p}{arg \; min}\left  \{ \frac{1}{2n} ||\mathbf{y - Xb}||^2_2 +\lambda ||b||_1 \right  \},$$
+$$\widehat{\mathbf{\beta }}_{\lambda, Ridge} = \underset{b \in \mathbb{R}^p}{arg \; min}\left  \{ \frac{1}{2n} ||\mathbf{y - Xb}||^2_2 +\frac{1}{2}\lambda ||b||_2 \right  \}.$$
+However, as noted in [1], the Lasso, Ridge and related procedures do not provide $p$-values or confidence intervals, and thus devising formal hypothesis tests for the parameter $\mathbf{\beta}$ remains an open problem.
+
+## Inference in the high-dimensional setting
+
+In recent years there has been some work on formal inference in the high-dimensional setting. Here, we present briefly the concept behind and provide examples of usage of a few selected methods, available in `R`: 
+
+1. a score test based on penalized regression (`lassoscore {lassoscore}`),
+2. multi-splitting approach (`hdi {hdi}`),
+3. the Grace test (`grace.test {Grace}`). 
+
+## False Discovery Rate in the presence of correlated predictors
+
+In assessing variable selection results in regression settings, False
+Discovery Rate (FDR) is often used to describe the  proportion of "discoveries" (here: selected variables) that were false (whose coefficients in the (true) full model are zero). The paper [x] shows that this full model definition of FDR suffers from
+unintuitive and potentially undesirable behavior in the presence of correlated predictors. [x] proposed a new false selection error criterion, the False Variable Rate (FVR), that avoids these problems and
+behaves in a more intuitive manner.
+
+Here, we present briefly the behavior of this False Variable Rate (FVR) criterion and utilize it to assess variable discoveries yielded by the inference methods mentioned above. 
+
+
+# METHODS 
+
+The methods we utilize address two aspects of penalized regression inference regarding variable selection: providing the inference and assessing the inference results in terms of false discovery rate. 
+
+## Inference in the high-dimensional setting
+
+### Score test based on penalized regression
+
+According to [x], in this test, we perform penalized regression of an outcome on all but a single feature, and test for correlation of the residuals with the held-out feature. This procedure is applied to each feature in turn. 
+
+More precisely, we first calculate $\widehat{\mathbf{b}}^0_{\lambda }$, which serves as an estimate of $\mathbf{\beta}$, using the penalized regression: 
+$$\widehat{\mathbf{b}}^0_{\lambda } = \underset{\mathbf{b}}{arg \; min}\left \{ ||\mathbf{y}-\mathbf{Xb}||^2_2/(2n) + \lambda J(\mathbf{b}) \right \},$$
+where $J(\mathbf{b})$ is a penalty function and $\lambda$ is a non-negative tuning parameter. We then set $\widehat{\mathbf{y}}^0_{\lambda } = \mathbf{Z}\widehat{\mathbf{b}}^0_{\lambda }$ and form the test statistic 
+$$T_{\lambda } = \mathbf{x}^T(\mathbf{y - \widehat{\mathbf{y}}^0_{\lambda }})/\sqrt{n},$$
+a measure of association between $\mathbf{x}$ and $\mathbf{y - \widehat{\mathbf{y}}^0_{\lambda }}$. We declare $T_{\lambda }$ to be statistically significant when $|T_{\lambda }|$ is large, based on an appropriate reference distribution (see [x]). 
+
+### Multi sample-splitting
+
+According to [x], it is a generic way for deriving p-values in hypotheses testing is given by splitting the sample with indices ${1, . . . , n}$ into two equal halves denoted by $I1$ and $I_2$. The idea is to use the first half $I_1$ for variable selection and the second half $I_2$ with the reduced set of selected variables (from $I_1$) for statistical inference in terms of p-values. Such a sample-splitting procedure avoids the over-optimism to use the data twice for selection and inference after selection (without taking the effect of selection into account).
+
+A major problem of the single sample-splitting method is its sensitivity with respect to the choice of splitting the entire sample: sample splits lead to wildly different p-values. To overcome the 'p-value lottery', we can run the sample-splitting method $B$ times, with $B$ large. Then, inference across multiple random splits can be aggregated, while keeping asymptotic control over the inclusion of noise variables. Under particular assumptions, the resulting p-values can be used for control of both family-wise error (FWER) and false discovery rate (FDR), as shown in [x]. 
+
+### Grace test 
+
+Grace test allows for inference in Graph-constrained estimation settings, which encourage similarities among neighboring covariates
+presented as nodes on a graph. Such procedure can result in more accurate estimations, especially in high dimensional settings, and can be applied for a special case of Ridge estimation as well.    
+
+The idea of the test focuses on bias of a penalized estimator of $\beta$. Note that Ridge is a biased estimator of $\beta$ and its estimation bias is negligible only if the Ridge tuning parameter $\lambda$ is close to zero. To construct a test statistic for the null hypothesis $H_0: \; \beta^*_J = 0$ for some $j \in \{1, ..., p\}$ and to control the type-I error rate of the test, the authors adjust for the potential estimation bias using a stochastic bound derived from an initial estimator (see [x]). With this adjustment the tuning parameter $\lambda$ needs not be very small. As a result, coefficient estimation and corresponding p-values computation in penalized estimation setting is obtained.  
+
+
+
+## False Variable Rate
+
+A false selection in the regression setting is usually defined as a selected variable that has a zero coefficient in the (true) full model. That is, for a set of selected variables $A \subseteq  \{1, . . . , p\}$ and full model $\mathbf{y=X\beta+\epsilon }$,  $\mathbf{\beta} \in \mathbb{R}^p$, the proportion of falsely selected variables is defined as
+$$FDP = |{j \in A : \beta_j = 0}| / |A|.$$
+The FDR is the expectation of this quantity for the given procedure. 
+
+### Motivation: presence of correlated predictors
+
+However, there are practical issues that arise when applying FDR to settings with the presence of correlated predictors, when more than one variable is likely to be capturing the same underlying signal (which is a common situation especially with high-dimensional data). Note that when the full model definition of FDR is applied in these settings, it is difficult to distinguish the significance of the correlated predictors, which can inflate their FDR. 
+
+### FVR formulation 
+
+Therefore, here we utilize a new approach: False Variable Rate (FVR), proposed in [x]. With FVR one considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. To do so, we investigate the coefficients of the model formed by projecting the true model onto the selected variables. More precisely, for a selected set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X\beta}$ from the full linear model onto subset of predictors $\mathbf{X_A}$, obtaining a projected mean $\mathbf{X\beta^(A)}$. We now define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector. 
+
+### FVR illustration
+
+Below we illustrate the projected model definition of a false selection. We see
+that variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$
+is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no
+information beyond $B_1$.
+
+![](http://i.imgur.com/BJ9BdXH.png)
+
+One compare the example above with the "classical" approach, where variables are always denoted as correct selections if they have a zero coefficient in the (true) full model, which is presented below: 
+
+![](http://i.imgur.com/n0OZeoq.png)
+
+
+# APPLICATION EXAMPLE
+
+Assume we are given simulated data matrix $X_{100 \times 300} \sim N(0, S)$, true signa; $\beta$ and observed response variable $Y = X\beta + \varepsilon$, $\varepsilon \sim N(0, 1)$.
+
+```{r config, echo = F, message = F, warning = F, cache = F, results = 'hide', include = FALSE}
+rm(list=ls())
+
+# Set project dir 
+project.dir <- "/Users/mkaras/Documents/Penalized-Regression-Inference/"
+
+library(knitr)
+library(MASS)
+library(Matrix)
+library(lassoscore)
+library(hdi)
+library(Grace)
+library(glmnet)
+
+knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
+opts_knit$set(upload.fun = function(file) imgur_upload(file))
+
+base_size.gg <- 10
+
+# Simulate Sigma variance-covariance matrix 
+Sigma.k.cor <- function(k.cor.base, p.tmp){
+  Sigma.mat.tmp <- matrix(k.cor.base, p.tmp, p.tmp) +  matrix(rnorm(p.tmp**2, sd = 0.03), p.tmp, p.tmp)
+  range(Sigma.mat.tmp)
+  diag(Sigma.mat.tmp) <- rep(1, p.tmp)
+  Sigma.mat.tmp <- as.matrix(nearPD(Sigma.mat.tmp)$mat)
+  Sigma.mat.tmp
+}
+
+# Parameters 
+p.tmp <- 300
+n.tmp <- 100
+sgnf.lvl <- 0.1
+beta.sgnf.n <- 10
+
+# Simulate data
+set.seed(1)
+
+S <- Sigma.k.cor(0.4, p.tmp)
+X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
+beta <- rep(0, p.tmp)
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 10
+Y.true <- X %*% beta
+Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+```
+
+
+
+```{r}
+# Simulate Sigma variance-covariance matrix 
+Sigma.k.cor <- function(k.cor.base, p.tmp){
+  Sigma.mat.tmp <- matrix(k.cor.base, p.tmp, p.tmp) +  matrix(rnorm(p.tmp**2, sd = 0.03), p.tmp, p.tmp)
+  range(Sigma.mat.tmp)
+  diag(Sigma.mat.tmp) <- rep(1, p.tmp)
+  Sigma.mat.tmp <- as.matrix(nearPD(Sigma.mat.tmp)$mat)
+  Sigma.mat.tmp
+}
+
+# Parameters 
+p.tmp <- 300
+n.tmp <- 100
+sgnf.lvl <- 0.1
+beta.sgnf.n <- 10
+
+# Simulate data
+set.seed(1)
+
+S <- Sigma.k.cor(0.4, p.tmp)
+X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
+beta <- rep(0, p.tmp)
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 10
+Y.true <- X %*% beta
+Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+```
+
+```{r}
+
+
+# lassoscore 
+res.lassoscore <- lassoscore(Y, X, 0.2)
+# res.lassoscore$fit$beta
+sum(res.lassoscore$p.model < sgnf.lvl)
+sum(res.lassoscore$p.model.cons < sgnf.lvl)
+sum(res.lassoscore$p.sand < sgnf.lvl)
+sum(res.lassoscore$p.sand.cons < sgnf.lvl)
+
+
+# hdi 
+## multisplit
+res.hdi.multi <- hdi(X, Y, method = "multi.split",
+                     model.selector = lasso.firstq,
+                     args.model.selector = list(q = 10))
+sum(res.hdi.multi$pval.corr < sgnf.lvl)
+## stability
+# res.hdi.stab <- hdi(X, Y, method = "stability", EV = ceiling(beta.sgnf.n * sgnf.lvl))
+res.hdi.stab <- hdi(X, Y, method = "stability", EV = p.tmp * 0.5)
+(res.hdi.stab$selected)
+
+
+# Grace test 
+
+# lambda.2 tuning parameter value for the ridge penalty
+
+ridge.fit.cv <- cv.glmnet(X, Y, alpha = 0)
+ridge.coef <- (coef(ridge.fit.cv))[-1]
+
+# Compute coefficients by definition
+ridge.fit.lambda <- ridge.fit.cv$lambda.1se * n.tmp
+ridge.coef.DEF <- as.vector(solve(t(X) %*% X + ridge.fit.lambda * diag(p.tmp)) %*% t(X) %*% Y)
+
+# Coefficients from Grace test
+res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = ridge.fit.lambda)
+sum(res.grace$pvalue < sgnf.lvl)
+```
+
+
+
+```{r}
+
+# res.grace <- grace.test.C(Y, X, L = diag(p.tmp), lambda.L = ridge.fit.lambda, lambda.2 = 0,
+#                           normalize.X  = FALSE, center.Y = FALSE)
+# res.grace.coef <- res.grace$beta
+
+
+library(MASS)
+library(glmnet)
+
+# Data dimensions
+p.tmp <- 100
+n.tmp <- 100
+
+# Data objects
+set.seed(1)
+X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = diag(p.tmp)))
+beta <- rep(0, p.tmp)
+beta[sample(1:p.tmp, 10, replace = FALSE)] <- 10
+Y.true <- X %*% beta
+Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+
+# Run glmnet 
+ridge.fit.cv <- cv.glmnet(X, Y, alpha = 0, intercept = FALSE)
+ridge.fit.lambda <- ridge.fit.cv$lambda.1se
+
+# Extract coefficient values for lambda.1se (without intercept)
+ridge.coef <- (coef(ridge.fit.cv, s = ridge.fit.lambda))[-1]
+
+# Get coefficients "by definition"
+ridge.coef.DEF <- drop(solve(crossprod(X) + diag(n.tmp * ridge.fit.lambda, p.tmp), crossprod(X, Y)))
+
+# Plot estimates
+plot(ridge.coef, type = "l", ylim = range(c(ridge.coef, ridge.coef.DEF)),
+     main = "black: Ridge `glmnet`\nred: Ridge by definition")
+lines(ridge.coef.DEF, col = "red")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+# SIMULATION STUDY 
+
+# DISCUSSION
+
+# REFERENCE 
+
+## Bibliography 
+
+- Voorman, A., Shojaie, A., Witten, D. (2014). Inference in High Dimensions with the Penalized Score Test. ([link](https://arxiv.org/pdf/1401.2678v3.pdf)) 
+
+- Zhao, S., Shojaie, A. (2015). A Significance Test for Graph-Constrained Estimation. ([link](https://arxiv.org/pdf/1506.08339v1.pdf))
+
+- Dezeure, R., Buehlmann, P., Meier, L., Meinshausen, N. (2015). High-Dimensional Inference: Confidence Intervals, p-Values and R-Software hdi. Statistical Science, 30(4): 533-558. ([link](https://arxiv.org/pdf/1408.4026v2.pdf))
+
+- Grazier G'Sell, M., Hastie, T., Tibshirani, R. (2013). False Variable Selection Rates in Regression. ([link](https://arxiv.org/pdf/1302.2303v1.pdf))
+
+- Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. Journal of the Royal Statistical
+Society, Series B, 58(1): 267-288.
+
+- Meinshausen, N., Meier, L. and Buehlmann, P. (2009) P-values for high-dimensional regression. Journal of the American Statistical Association, 104: 1671-1681
+
+## R Packages Used 
+
+- `lassoscore`: Voorman, A. (2015). lassoscore: High-Dimensional Inference with the Penalized Score Test. `R` package version 0.6. https://cran.r-project.org/web/packages/lassoscore/index.html
+
+- `Grace`: Zhao, S. (2016). Grace: Graph-Constrained Estimation and Hypothesis Tests. `R` package version 0.4.1. https://cran.r-project.org/web/packages/Grace/index.html
+
+- `hdi`: Meier, L. [aut, cre], Dezeure, R. [aut], Meinshausen, N. [aut], Maechler, M. [aut], Buehlmann, P. [aut] (2016). hdi: High-Dimensional Inference. `R` package version 0.1-6. https://cran.r-project.org/web/packages/hdi/index.html
+
+- `MASS`: Ripley, B. [aut, cre, cph], Venables, B. [ctb], Bates, D. M. [ctb], Hornik, K. [trl] (partial port ca 1998), Gebhardt, A. [trl] (partial port ca 1998), Firth, D. [ctb] (2016). MASS: Functions and datasets to support Venables and Ripley, "Modern Applied Statistics with S" (4th edition, 2002). `R` package version 7.3-45. https://cran.r-project.org/web/packages/MASS/index.html
+
+- `Matrix`: Bates, D., Maechler, M. (2016). Matrix: Classes and methods for dense and sparse matrices and operations on them using 'LAPACK' and 'SuiteSparse'. `R` package version 1.2-7.1. https://cran.r-project.org/web/packages/Matrix/index.html
+
+
+

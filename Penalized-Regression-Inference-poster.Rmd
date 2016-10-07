@@ -120,6 +120,9 @@ library(lassoscore)
 library(hdi)
 library(Grace)
 library(glmnet)
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/Sigma_k_cor.R")
+
 
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
 opts_knit$set(upload.fun = function(file) imgur_upload(file))

@@ -122,7 +122,7 @@ library(Grace)
 library(glmnet)
 library(ggplot2)
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
-source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/Sigma_k_cor.R")
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/utils.R")
 
 
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
@@ -133,7 +133,7 @@ opts_knit$set(upload.fun = function(file) imgur_upload(file))
 base_size.gg <- 10
 
 # Parameters 
-p.tmp <- 300
+p.tmp <- 200
 n.tmp <- 100
 sgnf.lvl <- 0.1
 beta.sgnf.n <- 10
@@ -141,10 +141,10 @@ beta.sgnf.n <- 10
 # Simulate data
 set.seed(1)
 
-S <- Sigma.k.cor(0.4, p.tmp)
+S <- Sigma.k.cor(0.3, p.tmp)
 X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
 beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 0.2
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 2
 Y.true <- X %*% beta
 Y <- scale(Y.true + matrix(rnorm(n.tmp)))
 
@@ -163,62 +163,44 @@ plot(plt)
 ## `lassoscore {lassoscore}:` Score test based on penalized regression
 
 ```{r, echo = TRUE}
+sgnf.lvl <- 0.1
+
+# lassoscore
 cv.res <-  cv.glmnet(X, Y)
 res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se)
-beta.is.selected <- which(res.lassoscore$p.model < 0.05)
+beta.is.selected <- which(res.lassoscore$p.model < sgnf.lvl)
 length(beta.is.selected)
-```
-
-```{r, fig.width=8, fig.height=2}
-# Function to plot method "discoveries"
-plot.discoveries <- function(beta, beta.is.selected){
-  p <- length(beta)
-  beta.selected <- rep(0, p)
-  beta.selected[beta.is.selected] <- max(beta)
-  plot.df <- data.frame(x = 1:p, beta.true = beta, beta.selected = beta.selected)
-  plot.df$color <- sapply(1:p, function(i){
-    beta.true.val <- plot.df$beta.true[i]
-    beta.sel.val <- plot.df$beta.selected[i]
-    if (beta.true.val != 0 & beta.sel.val == 0){
-      return("FN")
-    } else if (beta.true.val == 0 & beta.sel.val != 0){
-      return("FP")
-    } else if (beta.true.val == 0 & beta.sel.val == 0){
-      return("TN")
-    } else if (beta.true.val != 0 & beta.sel.val != 0){
-      return("TP")
-    }
-  })
-  
-  plt <- 
-    ggplot(data = plot.df, aes(x = x, y = beta.selected, color = color)) + 
-    geom_point() + 
-    labs(title = "", x = "", y = "", color = "") + 
-    theme_bw(base_size = base_size.gg, base_family = "Helvetica") + 
-    scale_color_manual(values=c("brown", "red", "green", "blue"), 
-                       name="",
-                       breaks=c("FN", "FP", "TN", "TP"))
-  plot(plt)
-}
-
 plot.discoveries(beta, beta.is.selected)
-```
 
-
-```{r}
-# res.lassoscore$fit$beta
-sum(res.lassoscore$p.model < sgnf.lvl)
-sum(res.lassoscore$p.model.cons < sgnf.lvl)
-sum(res.lassoscore$p.sand < sgnf.lvl)
-sum(res.lassoscore$p.sand.cons < sgnf.lvl)
-
-
-# hdi 
-## multisplit
-res.hdi.multi <- hdi(X, Y, method = "multi.split",
-                     model.selector = lasso.firstq,
+# hdi - multisplit
+res.hdi.multi <- hdi(X, Y, method = "multi.split", model.selector = lasso.firstq,
                      args.model.selector = list(q = 10))
+beta.is.selected <- which(res.hdi.multi$pval.corr < sgnf.lvl)
+length(beta.is.selected)
+plot.discoveries(beta, beta.is.selected)
+
+# Grace test
+lambda.2.seq <- exp(seq(-6, 10, length.out = 100)) 
+res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = lambda.2.seq)
+beta.is.selected <- which(res.grace$pvalue < sgnf.lvl)
+length(beta.is.selected)
+plot.discoveries(beta, beta.is.selected)
+
+sum(res.grace$pvalue < sgnf.lvl)
+
+
+
+
+
+
+
+
+
+
+
 sum(res.hdi.multi$pval.corr < sgnf.lvl)
+
+
 ## stability
 # res.hdi.stab <- hdi(X, Y, method = "stability", EV = ceiling(beta.sgnf.n * sgnf.lvl))
 res.hdi.stab <- hdi(X, Y, method = "stability", EV = p.tmp * 0.5)

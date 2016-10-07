@@ -38,8 +38,9 @@ plot.discoveries <- function(beta, beta.is.selected){
     geom_point() + 
     labs(title = "", x = "", y = "", color = "") + 
     theme_bw(base_size = base_size.gg, base_family = "Helvetica") + 
-    scale_color_manual(values=c("brown", "red", "green", "blue"), 
-                       name="",
-                       breaks=c("FN", "FP", "TN", "TP"))
+    scale_color_manual(values=c("FN" = "brown", 
+                                "FP" = "red", 
+                                "TP" = "green", 
+                                "TN" = "blue"))
   plot(plt)
 }

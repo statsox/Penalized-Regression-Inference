@@ -105,7 +105,7 @@ One compare the example above with the "classical" approach, where variables are
 
 # APPLICATION EXAMPLE
 
-Assume we are given simulated data matrix $X_{100 \times 300} \sim N(0, S)$, true signa; $\beta$ and observed response variable $Y = X\beta + \varepsilon$, $\varepsilon \sim N(0, 1)$.
+Assume we are given simulated data matrix $X_{100 \times 300} \sim N(0, S)$, true signal $\beta$ and observed response variable $Y = X\beta + \varepsilon$, $\varepsilon \sim N(0, 1)$.
 
 ```{r config, echo = F, message = F, warning = F, cache = F, results = 'hide', include = FALSE}
 rm(list=ls())
@@ -120,13 +120,16 @@ library(lassoscore)
 library(hdi)
 library(Grace)
 library(glmnet)
+library(ggplot2)
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/Sigma_k_cor.R")
 
 
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
 opts_knit$set(upload.fun = function(file) imgur_upload(file))
+```
 
+```{r, fig.width=4, fig.height=3.3}
 base_size.gg <- 10
 
 # Parameters 
@@ -141,48 +144,68 @@ set.seed(1)
 S <- Sigma.k.cor(0.4, p.tmp)
 X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
 beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 10
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 0.2
 Y.true <- X %*% beta
 Y <- scale(Y.true + matrix(rnorm(n.tmp)))
 
-
-
+# Plots
+vizu.mat(X, "X data (p>n, correlated predictors)", base_size = base_size.gg)
+plot.df <- data.frame(x = 1:p.tmp, y = beta)
+plt <- 
+  ggplot(plot.df, aes(x=x, y=y)) + 
+  geom_line() + 
+  labs(title = "true beta signal", x = "", y = "") + 
+  theme_bw(base_size = base_size.gg, base_family = "Helvetica") 
+plot(plt)
 ```
 
 
+## `lassoscore {lassoscore}:` Score test based on penalized regression
 
-```{r}
-# Simulate Sigma variance-covariance matrix 
-Sigma.k.cor <- function(k.cor.base, p.tmp){
-  Sigma.mat.tmp <- matrix(k.cor.base, p.tmp, p.tmp) +  matrix(rnorm(p.tmp**2, sd = 0.03), p.tmp, p.tmp)
-  range(Sigma.mat.tmp)
-  diag(Sigma.mat.tmp) <- rep(1, p.tmp)
-  Sigma.mat.tmp <- as.matrix(nearPD(Sigma.mat.tmp)$mat)
-  Sigma.mat.tmp
+```{r, echo = TRUE}
+cv.res <-  cv.glmnet(X, Y)
+res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se)
+beta.is.selected <- which(res.lassoscore$p.model < 0.05)
+length(beta.is.selected)
+```
+
+```{r, fig.width=8, fig.height=2}
+# Function to plot method "discoveries"
+plot.discoveries <- function(beta, beta.is.selected){
+  p <- length(beta)
+  beta.selected <- rep(0, p)
+  beta.selected[beta.is.selected] <- max(beta)
+  plot.df <- data.frame(x = 1:p, beta.true = beta, beta.selected = beta.selected)
+  plot.df$color <- sapply(1:p, function(i){
+    beta.true.val <- plot.df$beta.true[i]
+    beta.sel.val <- plot.df$beta.selected[i]
+    if (beta.true.val != 0 & beta.sel.val == 0){
+      return("FN")
+    } else if (beta.true.val == 0 & beta.sel.val != 0){
+      return("FP")
+    } else if (beta.true.val == 0 & beta.sel.val == 0){
+      return("TN")
+    } else if (beta.true.val != 0 & beta.sel.val != 0){
+      return("TP")
+    }
+  })
+  
+  plt <- 
+    ggplot(data = plot.df, aes(x = x, y = beta.selected, color = color)) + 
+    geom_point() + 
+    labs(title = "", x = "", y = "", color = "") + 
+    theme_bw(base_size = base_size.gg, base_family = "Helvetica") + 
+    scale_color_manual(values=c("brown", "red", "green", "blue"), 
+                       name="",
+                       breaks=c("FN", "FP", "TN", "TP"))
+  plot(plt)
 }
 
-# Parameters 
-p.tmp <- 300
-n.tmp <- 100
-sgnf.lvl <- 0.1
-beta.sgnf.n <- 10
-
-# Simulate data
-set.seed(1)
-
-S <- Sigma.k.cor(0.4, p.tmp)
-X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
-beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 10
-Y.true <- X %*% beta
-Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+plot.discoveries(beta, beta.is.selected)
 ```
 
+
 ```{r}
-
-
-# lassoscore 
-res.lassoscore <- lassoscore(Y, X, 0.2)
 # res.lassoscore$fit$beta
 sum(res.lassoscore$p.model < sgnf.lvl)
 sum(res.lassoscore$p.model.cons < sgnf.lvl)

@@ -129,15 +129,6 @@ opts_knit$set(upload.fun = function(file) imgur_upload(file))
 
 base_size.gg <- 10
 
-# Simulate Sigma variance-covariance matrix 
-Sigma.k.cor <- function(k.cor.base, p.tmp){
-  Sigma.mat.tmp <- matrix(k.cor.base, p.tmp, p.tmp) +  matrix(rnorm(p.tmp**2, sd = 0.03), p.tmp, p.tmp)
-  range(Sigma.mat.tmp)
-  diag(Sigma.mat.tmp) <- rep(1, p.tmp)
-  Sigma.mat.tmp <- as.matrix(nearPD(Sigma.mat.tmp)$mat)
-  Sigma.mat.tmp
-}
-
 # Parameters 
 p.tmp <- 300
 n.tmp <- 100
@@ -153,6 +144,9 @@ beta <- rep(0, p.tmp)
 beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 10
 Y.true <- X %*% beta
 Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+
+
+
 ```
 
 

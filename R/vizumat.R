@@ -58,6 +58,9 @@ vizu.mat <- function(matrix.object, title = "", base_size = 12,
                      clear.x.label = FALSE, clear.y.label = FALSE, clear.labels = TRUE,
                      geom_tile.colour = "grey"){
                   
+  require(ggplot2)
+  require(cowplot)
+  
   # Correct colnames and rownames
   n.col <- ncol(matrix.object)
   n.row <- nrow(matrix.object)

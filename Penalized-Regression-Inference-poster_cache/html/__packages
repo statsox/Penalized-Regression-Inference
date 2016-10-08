@@ -1,8 +1,5 @@
 base
 knitr
-dplyr
-reshape2
-ggplot2
 MASS
 Matrix
 glasso
@@ -13,4 +10,5 @@ lars
 scalreg
 hdi
 Grace
+ggplot2
 cowplot

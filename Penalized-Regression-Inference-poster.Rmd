@@ -129,7 +129,7 @@ knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, f
 opts_knit$set(upload.fun = function(file) imgur_upload(file))
 ```
 
-```{r, fig.width=4, fig.height=3.3}
+```{r, fig.width=3, fig.height=2.5}
 base_size.gg <- 10
 
 # Parameters 
@@ -141,15 +141,17 @@ beta.sgnf.n <- 10
 # Simulate data
 set.seed(1)
 
-S <- Sigma.k.cor(0.3, p.tmp)
-X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = S))
+Sigma <- Sigma.k.cor(0.3, p.tmp)
+X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = Sigma))
 beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 2
-Y.true <- X %*% beta
-Y <- scale(Y.true + matrix(rnorm(n.tmp)))
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 1
+X.beta <- X %*% beta
+error.sd <- 1 
+Y <- scale(rnorm(n.tmp, mean = X.beta, sd = error.sd))
 
 # Plots
-vizu.mat(X, "X data (p>n, correlated predictors)", base_size = base_size.gg)
+vizu.mat(Sigma, "Sigma var-cov mat.", base_size = base_size.gg)
+vizu.mat(X, "X data mat.", base_size = base_size.gg)
 plot.df <- data.frame(x = 1:p.tmp, y = beta)
 plt <- 
   ggplot(plot.df, aes(x=x, y=y)) + 
@@ -160,113 +162,97 @@ plot(plt)
 ```
 
 
-## `lassoscore {lassoscore}:` Score test based on penalized regression
+## `lassoscore {lassoscore}`: Score test based on penalized regression
 
-```{r, echo = TRUE}
+- p-values computed for selected $\lambda$ value
+- here: $\lambda$ value selected with `cv.glmnet {glmnet}` cross-validation method
+
+```{r, echo = TRUE, fig.width=8, fig.height=2}
 sgnf.lvl <- 0.1
 
 # lassoscore
 cv.res <-  cv.glmnet(X, Y)
 res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se)
+
 beta.is.selected <- which(res.lassoscore$p.model < sgnf.lvl)
 length(beta.is.selected)
-plot.discoveries(beta, beta.is.selected)
+```
 
+```{r, echo = FALSE, fig.width=8, fig.height=2}
+plot.discoveries(beta, beta.is.selected)
+```
+
+
+
+## `hdi {hdi}`: Multi sample-splitting
+
+- `B` - number of sample-splits 
+- `model.selector` - function to perform model selection
+- `args.model.selector` - list of further arguments for function `model.selector`
+
+```{r, echo = TRUE, fig.width=8, fig.height=2}
 # hdi - multisplit
-res.hdi.multi <- hdi(X, Y, method = "multi.split", model.selector = lasso.firstq,
-                     args.model.selector = list(q = 10))
+res.hdi.multi <- hdi(X, Y, method = "multi.split", B = 50, 
+                     model.selector = lasso.cv,
+                     args.model.selector = list(nfolds = 10))
+
 beta.is.selected <- which(res.hdi.multi$pval.corr < sgnf.lvl)
 length(beta.is.selected)
-plot.discoveries(beta, beta.is.selected)
+```
 
+```{r, echo = FALSE, fig.width=8, fig.height=2}
+plot.discoveries(beta, beta.is.selected)
+```
+
+
+
+## `grace.test {Grace}`: Grace test
+
+- perform cross-validation over $\lambda$ grid Ridge parameters
+
+```{r, echo = TRUE, cache=TRUE, fig.width=8, fig.height=2}
 # Grace test
 lambda.2.seq <- exp(seq(-6, 10, length.out = 100)) 
 res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = lambda.2.seq)
+
 beta.is.selected <- which(res.grace$pvalue < sgnf.lvl)
 length(beta.is.selected)
-plot.discoveries(beta, beta.is.selected)
-
-sum(res.grace$pvalue < sgnf.lvl)
-
-
-
-
-
-
-
-
-
-
-
-sum(res.hdi.multi$pval.corr < sgnf.lvl)
-
-
-## stability
-# res.hdi.stab <- hdi(X, Y, method = "stability", EV = ceiling(beta.sgnf.n * sgnf.lvl))
-res.hdi.stab <- hdi(X, Y, method = "stability", EV = p.tmp * 0.5)
-(res.hdi.stab$selected)
-
-
-# Grace test 
-
-# lambda.2 tuning parameter value for the ridge penalty
-
-ridge.fit.cv <- cv.glmnet(X, Y, alpha = 0)
-ridge.coef <- (coef(ridge.fit.cv))[-1]
-
-# Compute coefficients by definition
-ridge.fit.lambda <- ridge.fit.cv$lambda.1se * n.tmp
-ridge.coef.DEF <- as.vector(solve(t(X) %*% X + ridge.fit.lambda * diag(p.tmp)) %*% t(X) %*% Y)
-
-# Coefficients from Grace test
-res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = ridge.fit.lambda)
-sum(res.grace$pvalue < sgnf.lvl)
 ```
 
+```{r, echo = FALSE, fig.width=8, fig.height=2}
+plot.discoveries(beta, beta.is.selected)
+```
 
 
 ```{r}
+# FVR implementation
 
-# res.grace <- grace.test.C(Y, X, L = diag(p.tmp), lambda.L = ridge.fit.lambda, lambda.2 = 0,
-#                           normalize.X  = FALSE, center.Y = FALSE)
-# res.grace.coef <- res.grace$beta
+beta.is.selected <- which(beta != 0)
+
+p <- length(beta)
+A.plus.idx <- c(beta.is.selected, p+1)
+
+Sigma.aug.11 <- Sigma
+Sigma.aug.12 <- Sigma %*% beta
+Sigma.aug.21 <- t(beta) %*% Sigma
+Sigma.aug.22 <- t(beta) %*% Sigma %*% beta + error.sd^2
+
+Sigma.aug.1. <- cbind(Sigma.aug.11, Sigma.aug.12)
+Sigma.aug.2. <- cbind(Sigma.aug.21, Sigma.aug.22)
+Sigma.aug <- rbind(Sigma.aug.1., Sigma.aug.2.)
+# dim(Sigma.aug)
+
+Sigma.aug.A.plus <- Sigma.aug[A.plus.idx, A.plus.idx]
+Sigma.aug.A.plus.inv <- solve(Sigma.aug.A.plus)
+Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
+Sigma.aug.A.plus.inv.Y
 
 
-library(MASS)
-library(glmnet)
 
-# Data dimensions
-p.tmp <- 100
-n.tmp <- 100
 
-# Data objects
-set.seed(1)
-X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = diag(p.tmp)))
-beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, 10, replace = FALSE)] <- 10
-Y.true <- X %*% beta
-Y <- scale(Y.true + matrix(rnorm(n.tmp)))
-
-# Run glmnet 
-ridge.fit.cv <- cv.glmnet(X, Y, alpha = 0, intercept = FALSE)
-ridge.fit.lambda <- ridge.fit.cv$lambda.1se
-
-# Extract coefficient values for lambda.1se (without intercept)
-ridge.coef <- (coef(ridge.fit.cv, s = ridge.fit.lambda))[-1]
-
-# Get coefficients "by definition"
-ridge.coef.DEF <- drop(solve(crossprod(X) + diag(n.tmp * ridge.fit.lambda, p.tmp), crossprod(X, Y)))
-
-# Plot estimates
-plot(ridge.coef, type = "l", ylim = range(c(ridge.coef, ridge.coef.DEF)),
-     main = "black: Ridge `glmnet`\nred: Ridge by definition")
-lines(ridge.coef.DEF, col = "red")
-
+beta.is.selected
+which(beta != 0)
 ```
-
-
-
-
 
 
 

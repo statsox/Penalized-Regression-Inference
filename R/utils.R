@@ -44,3 +44,18 @@ plot.discoveries <- function(beta, beta.is.selected){
                                 "TN" = "blue"))
   plot(plt)
 }
+
+
+
+# Compute Toeplitz matrix M with dimensions p x p, 
+# with entries given with the following formula:
+# M[i, j] = exp(-k*(i-j)^2)
+# 
+toeplitz.mat <- function(p, k){
+  mat <- matrix(0, nrow = p, ncol = p)
+  for (i in 1:p){
+    for (j in 1:p)
+      mat[i, j] <- exp(-k*(i-j)^2)
+  }
+  return(mat)
+}

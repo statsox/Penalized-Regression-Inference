@@ -15,5 +15,5 @@ FVP.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
   Sigma.aug.A.plus <- Sigma.aug[A.plus.idx, A.plus.idx]
   Sigma.aug.A.plus.inv <- solve(Sigma.aug.A.plus)
   Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
-  return(round(Sigma.aug.A.plus.inv.Y, 4))
+  return(Sigma.aug.A.plus.inv.Y)
 }

@@ -116,7 +116,6 @@ Discovery Proportion (FDP) is often used to describe the proportion of false "di
 \item Here, we use \textbf{False Variable Proportion (FVP)} measure ([x]), which considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. Mathematically, for a selected variables set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X}\beta$ from the {\it full model} onto subset of predictors $\mathbf{X}_A$ to obtain a projected mean $\mathbf{X}\beta^{(A)}$. We define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector: 
 $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
 
-
 \end{itemize}
 
 \end{minipage}
@@ -126,24 +125,32 @@ $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, right of=intro, node distance=40cm] (fdrill){%
+\node [myboxwhite, right of=intro, node distance=40cm] (fvillustration){%
 
   \begin{minipage}{0.48\textwidth}
   
-\includegraphics[width=38cm]{images/FVR-ill.png}
+\includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
 \small
-Figure 1. \textbf{False Variable Rate (FVR)} criterion illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: X. 
+Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: X. 
 
 \end{minipage}
 };
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node [myboxviolet, below of=fvillustration, node distance=9cm, yshift=0cm, xshift=0cm] (fvnote){%
+    \begin{minipage}{0.48\textwidth}
+    
+{\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.1$).  
 
+\end{minipage}
+
+};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxyellow, below of=fdrill, node distance=1cm, yshift = -19cm] (usageexample){%
+\node [myboxyellow, below of=fvnote, node distance=11cm] (usageexample){%
   \begin{minipage}{0.48\textwidth}
 
-\textbf{Code example}. Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
+\textbf{\texttt{R} usage example.} Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
 
 <<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
 rm(list=ls())
@@ -203,14 +210,25 @@ X.beta <- X %*% beta
 error.sd <- 1 
 Y <- scale(rnorm(n.tmp, mean = X.beta, sd = error.sd))
 
-# Plots
-vizu.mat(toeplitz.mat(p.tmp, 0.005) , "Sigma var-cov mat.", base_size = base_size.gg, geom_tile.colour = "white")
-vizu.mat(X, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
+# Sigma plot
+vizu.mat(toeplitz.mat(p.tmp, 0.005) , "Sigma variance-covariance matrix", base_size = base_size.gg, geom_tile.colour = "white")
+
+# True beta plot
 plot.df <- data.frame(x = 1:p.tmp, y = beta)
 plt <- 
   ggplot(plot.df, aes(x=x, y=y)) + 
   geom_line() + 
   labs(title = "true beta signal", x = "", y = "") + 
+  theme_bw(base_size = base_size.gg, base_family = "Helvetica") 
+plot(plt)
+
+# Y ~ X %*% beta plot 
+# vizu.mat(, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
+plot.df <- data.frame(x = X.beta, y = Y)
+plt <- 
+  ggplot(plot.df, aes(x=x, y=y)) + 
+  geom_point() + 
+  labs(title = "Y ~ X beta", x = "", y = "") + 
   theme_bw(base_size = base_size.gg, base_family = "Helvetica") 
 plot(plt)
 @
@@ -221,25 +239,22 @@ plot(plt)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, below of=usageexample, node distance=5cm, yshift = -19cm] (usageexample2){%
+\node [myboxwhite, below of=usageexample, node distance=15cm, yshift = -19cm] (usageexample2){%
   \begin{minipage}{0.48\textwidth}
   
+\textbf{\texttt{R}: FVP projected mean.} Values "close" to 0 indicate false discovery. 
+
 \small
-\textbf{FVR projected mean} Values euqal 0 indicate false discovery. 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
-# source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/PVR_proj_mean.R")
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/false_variable_fw.R")
 
-# Check how close to 0 ("false discovery") is actual true beta 
-(beta.sel.tmp <- which(beta != 0))
-FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+# How close to 0 ("false discovery") is actual true beta 
+(beta.sel.idx <- which(beta != 0))
+FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma)
 
-# Make change in vector of "discoveries" we check for falses 
+# Make change in vector of "discoveries" we check for "false discovery" 
 beta.sel.tmp <- c(c(7), beta.sel.tmp[-1])
-FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
-
-# Make change in vector of "discoveries" we check for falses 
-beta.sel.tmp <- c(c(1, 2), beta.sel.tmp[-1])
-FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma),3)
 @
 
 

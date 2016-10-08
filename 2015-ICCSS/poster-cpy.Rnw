@@ -1,4 +1,3 @@
-%\documentclass[portrait,a0,posterdraft]{a0poster}
 \documentclass[portrait,a0,final]{a0poster}
 % For documentation, see
 % ftp://ftp.funet.fi/pub/TeX/CTAN/macros/latex/contrib/a0poster/a0_eng.pdf
@@ -7,7 +6,6 @@
 \usepackage[utf8]{inputenc}
 \usepackage[sc]{mathpazo}
 \usepackage[T1]{fontenc}
-%\usepackage{hyperref}
 \usepackage{geometry}
 \geometry{verbose,tmargin=1.0cm,bmargin=1.5cm,lmargin=1.5cm,rmargin=1.5cm}
 \setcounter{secnumdepth}{2}
@@ -22,14 +20,9 @@
 \usepackage{nopageno}
 \usepackage{mathtools}
 \usepackage{color}
-% \usepackage[rightcaption]{sidecap}
 \usepackage{graphicx}
-
 % Fonts
-%\renewcommand{\familydefault}{\sfdefault}
 \renewcommand{\familydefault}{\rmdefault}
-%\usepackage{times}
-
 % For tikz
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,snakes}
@@ -46,29 +39,18 @@
 \maketitle
 \Large
 
-
 % Define block styles
-% \tikzstyle{decision} = [diamond, draw, fill=blue!20, text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
-% \tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=5em, text centered, rounded corners, minimum height=4em]
-% \tikzstyle{greenbox} = [rectangle, draw=blue, fill=green!20, text width=5em, text centered, rounded corners, inner sep=10pt, inner ysep=12pt, very thick]
-% \tikzstyle{line} = [draw, -latex']
-% \tikzstyle{cloud} = [draw, ellipse, node distance=4cm, minimum height=2em, text width=5em]
-% \tikzstyle{mybox} = [draw=blue, fill=green!20, very thick, rectangle, rounded corners, inner sep=10pt, inner ysep=20pt]
-
-% \tikzstyle{myboxwhite} = [rectangle, rounded corners, inner sep=10pt, inner ysep=0pt]
 \tikzstyle{myboxwhite} = [rectangle, rounded corners, inner sep=0pt, inner ysep=0pt]
-
 \tikzstyle{myboxblue} = [rectangle, fill=blue!10, rounded corners, inner sep=10pt, inner ysep=20pt]
-% \tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=10pt, inner ysep=20pt]
 \tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=0pt, inner ysep=0pt]
-
 \tikzstyle{myboxyellow} = [rectangle, fill=yellow!10, rounded corners, inner sep=10pt, inner ysep=20pt]
 \tikzstyle{fancytitle} = [fill=white, text=black, ellipse, draw=blue]
-
 
 \vspace{0cm}
 
 \begin{tikzpicture}[]
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxwhite] (intro){
@@ -89,7 +71,7 @@ However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, th
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxblue, below of=intro, node distance=37cm, yshift=0cm, xshift=0cm] (methods){%
+\node [myboxblue, below=1cm of intro.south, anchor=north] (methods1){%
     \begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Penalized regression inference.} Here, we present examples of usage of a few selected methods available in \texttt{R}:
@@ -104,13 +86,12 @@ However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, th
 
 \end{itemize}
 
-\end{minipage}
-
+  \end{minipage}
 };
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxviolet, below of=methods, node distance=32cm, yshift=0cm, xshift=0cm] (methods2){%
+\node [myboxviolet, below=1cm of methods1.south, anchor=north] (methods2){%
     \begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Assessing the inference results.} In regression settings, False
@@ -123,27 +104,18 @@ $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
 
 \end{itemize}
 
-\end{minipage}
-
+  \end{minipage}
 };
 
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%\node [myboxwhite, right of=intro, node distance=40cm, yshift=0cm, xshift=0cm] (fvillustration){%
-\node [myboxwhite, yshift=0cm, xshift=40cm] (fvillustration){%
-
-  \begin{minipage}{0.48\textwidth}
+\node [myboxwhite, right=40 cm of intro.north, anchor=north] (fvillustration){%
+\begin{minipage}{0.48\textwidth}
   
-%\includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
+\includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
 \small
 Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: X. 
 
@@ -151,20 +123,19 @@ Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are d
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxviolet, below of=fvillustration, node distance=9cm] (fvnote){%
-    \begin{minipage}{0.48\textwidth}
+\node [myboxviolet, below=1cm of fvillustration.south, anchor=north] (fvnote){%
+  \begin{minipage}{0.48\textwidth}
     
 {\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.2$).  
 
-\end{minipage}
-
+  \end{minipage}
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxyellow, below of=fvnote, node distance=11cm] (usageexample){%
+\node [myboxwhite, below=1cm of fvnote.south, anchor=north] (usageexample){%
   \begin{minipage}{0.48\textwidth}
 
-\textbf{\texttt{R} usage example.} Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
+\textbf{\texttt{R} usage examples.} Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
 
 <<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
 rm(list=ls())

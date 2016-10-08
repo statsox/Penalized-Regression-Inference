@@ -143,7 +143,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %\node [myboxwhite, right of=intro, node distance=40cm, yshift=0cm, xshift=0cm] (fvillustration){%
-\node [myboxwhite, yshift=0cm, xshift=40cm] (fvillustration){%
+\node [myboxwhite, right=40 cm of intro.north, anchor=north] (fvillustration){%
 
   \begin{minipage}{0.48\textwidth}
   
@@ -153,7 +153,7 @@ text of the printing and typesetting industry. Lorem Ipsum has been the industry
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxviolet, below of=fvillustration, node distance=10cm] (fvnote){%
+\node [myboxviolet, below=1cm of fvillustration.south, anchor=north] (fvnote){%
     \begin{minipage}{0.48\textwidth}
     
 text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.

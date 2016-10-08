@@ -22,7 +22,7 @@
 \usepackage{nopageno}
 \usepackage{mathtools}
 \usepackage{color}
-\usepackage[rightcaption]{sidecap}
+% \usepackage[rightcaption]{sidecap}
 \usepackage{graphicx}
 
 % Fonts
@@ -48,15 +48,20 @@
 
 
 % Define block styles
-\tikzstyle{decision} = [diamond, draw, fill=blue!20, text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
-\tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=5em, text centered, rounded corners, minimum height=4em]
-\tikzstyle{greenbox} = [rectangle, draw=blue, fill=green!20, text width=5em, text centered, rounded corners, inner sep=10pt, inner ysep=12pt, very thick]
-\tikzstyle{line} = [draw, -latex']
-\tikzstyle{cloud} = [draw, ellipse, node distance=4cm, minimum height=2em, text width=5em]
-\tikzstyle{mybox} = [draw=blue, fill=green!20, very thick, rectangle, rounded corners, inner sep=10pt, inner ysep=20pt]
-\tikzstyle{myboxwhite} = [rectangle, rounded corners, inner sep=10pt, inner ysep=0pt]
+% \tikzstyle{decision} = [diamond, draw, fill=blue!20, text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+% \tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=5em, text centered, rounded corners, minimum height=4em]
+% \tikzstyle{greenbox} = [rectangle, draw=blue, fill=green!20, text width=5em, text centered, rounded corners, inner sep=10pt, inner ysep=12pt, very thick]
+% \tikzstyle{line} = [draw, -latex']
+% \tikzstyle{cloud} = [draw, ellipse, node distance=4cm, minimum height=2em, text width=5em]
+% \tikzstyle{mybox} = [draw=blue, fill=green!20, very thick, rectangle, rounded corners, inner sep=10pt, inner ysep=20pt]
+
+% \tikzstyle{myboxwhite} = [rectangle, rounded corners, inner sep=10pt, inner ysep=0pt]
+\tikzstyle{myboxwhite} = [rectangle, rounded corners, inner sep=0pt, inner ysep=0pt]
+
 \tikzstyle{myboxblue} = [rectangle, fill=blue!10, rounded corners, inner sep=10pt, inner ysep=20pt]
-\tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=10pt, inner ysep=20pt]
+% \tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=10pt, inner ysep=20pt]
+\tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=0pt, inner ysep=0pt]
+
 \tikzstyle{myboxyellow} = [rectangle, fill=yellow!10, rounded corners, inner sep=10pt, inner ysep=20pt]
 \tikzstyle{fancytitle} = [fill=white, text=black, ellipse, draw=blue]
 
@@ -124,12 +129,21 @@ $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
 
 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, right of=intro, node distance=40cm] (fvillustration){%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%\node [myboxwhite, right of=intro, node distance=40cm, yshift=0cm, xshift=0cm] (fvillustration){%
+\node [myboxwhite, yshift=0cm, xshift=40cm] (fvillustration){%
 
   \begin{minipage}{0.48\textwidth}
   
-\includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
+%\includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
 \small
 Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: X. 
 
@@ -293,7 +307,6 @@ FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 
 \end{minipage}
 };
-
 
 
 

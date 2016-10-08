@@ -17,3 +17,14 @@ FVP.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
   Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
   return(Sigma.aug.A.plus.inv.Y)
 }
+
+
+
+FVP <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1, thresh = 0.1){
+  
+  proj.mean <- FVP.proj.mean(beta.true, beta.sel.idx, Sigma, error.sd)
+  proj.mean.abs <- abs(proj.mean)
+  proj.mean.0 <- which(proj.mean.abs < thresh)
+  FVP.val <- length(proj.mean.0) / length(beta.true)
+  return(FVP.val)
+}

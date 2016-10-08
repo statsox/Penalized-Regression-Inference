@@ -239,26 +239,27 @@ plot(plt)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, below of=usageexample, node distance=15cm, yshift = -19cm] (usageexample2){%
+\node [myboxwhite, below of=usageexample, node distance=11.5cm, yshift = -19cm] (usageexample2){%
   \begin{minipage}{0.48\textwidth}
   
-\textbf{\texttt{R}: FVP projected mean.} Values "close" to 0 indicate false discovery. 
-
 \small
+
+\textbf{\texttt{R}: Projected mean \& FVP.} Values "close" to 0 indicate false discovery. 
+
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/false_variable_fw.R")
 
-# How close to 0 ("false discovery") is actual true beta 
+# True beta indices 
 (beta.sel.idx <- which(beta != 0))
-FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma)
+round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma), 2)
 
-# Make change in vector of "discoveries" we check for "false discovery" 
-beta.sel.tmp <- c(c(7), beta.sel.tmp[-1])
-round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma),3)
+# Make change in selected beta indices vector we check for "false discovery" 
+beta.sel.idx <- c(c(7), beta.sel.idx[-1])
+round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma), 2)
 @
 
 
-\textbf{$p-values$: Score test based on penalized regression} 
+\texttt{R}: $p$-values \& FVP: \textbf{Score test based on penalized regression.}
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 cv.res <-  cv.glmnet(X, Y) # Run cv.glmnet to choose *exemplary* lambda for which we compute lassoscore
@@ -266,12 +267,12 @@ res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se)
 beta.selected.idx <- which(res.lassoscore$p.model < 0.1) # subset of p.values < 0.1
 @
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
 plot.discoveries(beta, beta.selected.idx)
 @
 
 
-\textbf{$p-values$: Multi sample-splitting} 
+\texttt{R}: $p$-values \& FVP: \textbf{Multi sample-splitting} 
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 res.hdi.multi <- hdi(X, Y, method = "multi.split", B = 50, model.selector = lasso.cv,
@@ -279,12 +280,12 @@ res.hdi.multi <- hdi(X, Y, method = "multi.split", B = 50, model.selector = lass
 beta.selected.idx <- which(res.hdi.multi$pval.corr < 0.1)
 @
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
 plot.discoveries(beta, beta.selected.idx)
 @
 
 
-\textbf{$p-values$: Grace test} 
+\texttt{R}: $p$-values \& FVP: \textbf{Grace test} 
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 lambda.2.seq <- exp(seq(-6, 10, length.out = 100)) 
@@ -292,7 +293,7 @@ res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.
 beta.selected.idx <- which(res.grace$pvalue < 0.1)
 @
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
 plot.discoveries(beta, beta.selected.idx)
 @
 

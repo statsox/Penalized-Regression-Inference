@@ -1,0 +1,14 @@
+base
+knitr
+MASS
+Matrix
+glasso
+foreach
+glmnet
+lassoscore
+lars
+scalreg
+hdi
+Grace
+ggplot2
+cowplot

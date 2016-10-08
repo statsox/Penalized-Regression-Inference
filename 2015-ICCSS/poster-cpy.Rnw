@@ -140,10 +140,9 @@ Figure 1. \textbf{False Variable Rate (FVR)} criterion illustration. Variables a
 \node [myboxyellow, below of=fdrill, node distance=1cm, yshift = -19cm] (usageexample){%
   \begin{minipage}{0.48\textwidth}
 
-\textbf{Code example}. Assume we are given simulated data matrix $X_{100 \times 300} \sim N(0, S)$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1)$.
+\textbf{Code example}. Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
 
 <<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
-plot(1:10)
 rm(list=ls())
 library(knitr)
 library(MASS)
@@ -158,8 +157,8 @@ source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
 @
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=2>>=
-base_size.gg <- 8
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+base_size.gg <- 10
 
 # Parameters 
 p.tmp <- 200
@@ -170,7 +169,7 @@ beta.sgnf.n <- 10
 # Simulate data
 set.seed(1)
 
-Sigma <- Sigma.k.cor(0.3, p.tmp)
+Sigma <- toeplitz.mat(p.tmp, 0.1) 
 X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = Sigma))
 beta <- rep(0, p.tmp)
 beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 1
@@ -179,8 +178,8 @@ error.sd <- 1
 Y <- scale(rnorm(n.tmp, mean = X.beta, sd = error.sd))
 
 # Plots
-vizu.mat(Sigma, "Sigma var-cov mat.", base_size = base_size.gg)
-vizu.mat(X, "X data mat.", base_size = base_size.gg)
+vizu.mat(toeplitz.mat(p.tmp, 0.005) , "Sigma var-cov mat.", base_size = base_size.gg, geom_tile.colour = "white")
+vizu.mat(X, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
 plot.df <- data.frame(x = 1:p.tmp, y = beta)
 plt <- 
   ggplot(plot.df, aes(x=x, y=y)) + 
@@ -195,6 +194,62 @@ plot(plt)
 };
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node [myboxwhite, below of=usageexample, node distance=1cm, yshift = -19cm] (usageexample2){%
+  \begin{minipage}{0.48\textwidth}
+
+\textbf{Code example}. Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
+
+<<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
+rm(list=ls())
+library(knitr)
+library(MASS)
+library(Matrix)
+library(lassoscore)
+library(hdi)
+library(Grace)
+library(glmnet)
+library(ggplot2)
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/utils.R")
+knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
+@
+
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+base_size.gg <- 10
+
+# Parameters 
+p.tmp <- 200
+n.tmp <- 100
+sgnf.lvl <- 0.1
+beta.sgnf.n <- 10
+
+# Simulate data
+set.seed(1)
+
+Sigma <- toeplitz.mat(p.tmp, 0.1) 
+X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = Sigma))
+beta <- rep(0, p.tmp)
+beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 1
+X.beta <- X %*% beta
+error.sd <- 1 
+Y <- scale(rnorm(n.tmp, mean = X.beta, sd = error.sd))
+
+# Plots
+vizu.mat(toeplitz.mat(p.tmp, 0.005) , "Sigma var-cov mat.", base_size = base_size.gg, geom_tile.colour = "white")
+vizu.mat(X, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
+plot.df <- data.frame(x = 1:p.tmp, y = beta)
+plt <- 
+  ggplot(plot.df, aes(x=x, y=y)) + 
+  geom_line() + 
+  labs(title = "true beta signal", x = "", y = "") + 
+  theme_bw(base_size = base_size.gg, base_family = "Helvetica") 
+plot(plt)
+@
+
+
+\end{minipage}
+};
 
 
 

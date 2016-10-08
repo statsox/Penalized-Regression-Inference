@@ -35,8 +35,8 @@ plot.discoveries <- function(beta, beta.is.selected){
   
   plt <- 
     ggplot(data = plot.df, aes(x = x, y = beta.selected, color = color)) + 
-    geom_point() + 
-    labs(title = "", x = "", y = "", color = "") + 
+    geom_point(size = 2) + 
+    labs(title = "", x = "", y = "", color = "full model\nFDP") + 
     theme_bw(base_size = base_size.gg, base_family = "Helvetica") + 
     scale_color_manual(values=c("FN" = "brown", 
                                 "FP" = "red", 

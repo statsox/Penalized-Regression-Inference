@@ -137,10 +137,10 @@ Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are d
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxviolet, below of=fvillustration, node distance=9cm, yshift=0cm, xshift=0cm] (fvnote){%
+\node [myboxviolet, below of=fvillustration, node distance=9cm] (fvnote){%
     \begin{minipage}{0.48\textwidth}
     
-{\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.1$).  
+{\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.2$).  
 
 \end{minipage}
 
@@ -168,25 +168,6 @@ source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference
 
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
 
-
-FVP.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
-  p <- length(beta.true)
-  A.plus.idx <- c(beta.sel.idx, p+1)
-  
-  Sigma.aug.11 <- Sigma
-  Sigma.aug.12 <- Sigma %*% beta.true
-  Sigma.aug.21 <- t(beta.true) %*% Sigma
-  Sigma.aug.22 <- t(beta.true) %*% Sigma %*% beta.true + error.sd^2
-  
-  Sigma.aug.1. <- cbind(Sigma.aug.11, Sigma.aug.12)
-  Sigma.aug.2. <- cbind(Sigma.aug.21, Sigma.aug.22)
-  Sigma.aug <- rbind(Sigma.aug.1., Sigma.aug.2.)
-  
-  Sigma.aug.A.plus <- Sigma.aug[A.plus.idx, A.plus.idx]
-  Sigma.aug.A.plus.inv <- solve(Sigma.aug.A.plus)
-  Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
-  return(round(Sigma.aug.A.plus.inv.Y, 4))
-}
 @
 
 
@@ -239,7 +220,7 @@ plot(plt)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, below of=usageexample, node distance=11.5cm, yshift = -19cm] (usageexample2){%
+\node [myboxwhite, below of=usageexample, node distance=35cm] (usageexample2){%
   \begin{minipage}{0.48\textwidth}
   
 \small
@@ -256,6 +237,9 @@ round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma
 # Make change in selected beta indices vector we check for "false discovery" 
 beta.sel.idx <- c(c(7), beta.sel.idx[-1])
 round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma), 2)
+
+# False Variable Proportion for heuiristically chosen threshold of value "close" to 0
+FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 @
 
 
@@ -264,37 +248,47 @@ round(FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 cv.res <-  cv.glmnet(X, Y) # Run cv.glmnet to choose *exemplary* lambda for which we compute lassoscore
 res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se) 
-beta.selected.idx <- which(res.lassoscore$p.model < 0.1) # subset of p.values < 0.1
+beta.sel.idx <- which(res.lassoscore$p.model < 0.1) # subset of p.values < 0.1
 @
 
 <<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
-plot.discoveries(beta, beta.selected.idx)
+plot.discoveries(beta, beta.sel.idx)
 @
 
+<<eval=TRUE, echo = TRUE, cache = TRUE>>=
+FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
+@
 
 \texttt{R}: $p$-values \& FVP: \textbf{Multi sample-splitting} 
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 res.hdi.multi <- hdi(X, Y, method = "multi.split", B = 50, model.selector = lasso.cv,
                      args.model.selector = list(nfolds = 10))
-beta.selected.idx <- which(res.hdi.multi$pval.corr < 0.1)
+beta.sel.idx <- which(res.hdi.multi$pval.corr < 0.1)
 @
 
 <<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
-plot.discoveries(beta, beta.selected.idx)
+plot.discoveries(beta, beta.sel.idx)
 @
 
+<<eval=TRUE, echo = TRUE, cache = TRUE>>=
+FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
+@
 
 \texttt{R}: $p$-values \& FVP: \textbf{Grace test} 
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 lambda.2.seq <- exp(seq(-6, 10, length.out = 100)) 
 res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = lambda.2.seq)
-beta.selected.idx <- which(res.grace$pvalue < 0.1)
+beta.sel.idx <- which(res.grace$pvalue < 0.1)
 @
 
 <<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2, fig.width=16, fig.show='hold'>>=
-plot.discoveries(beta, beta.selected.idx)
+plot.discoveries(beta, beta.sel.idx)
+@
+
+<<eval=TRUE, echo = TRUE, cache = TRUE>>=
+FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 @
 
 \end{minipage}

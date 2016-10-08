@@ -75,7 +75,7 @@ where $\mathbf{X} = [\mathbf{x}_1, . . . , \mathbf{x}_p] \in \mathbb{R}^{n \time
 
 {\bf Penalized regression techniques.} In the case where $p$ is large, penalized regression techniques such as Ridge and Lasso can be employed to obtain $\beta$ estimates:
 $$\widehat{\beta }_{\lambda} = \underset{b \in \mathbb{R}^p}{arg \; min}\left  \{ \frac{1}{2n} ||\mathbf{y - Xb}||^2_2 +\lambda J(b)\right  \},$$
-where $J(b) = ||b||_1$ for Ridge and $J(b) = \frac{1}{2}||b||_2$ for Lasso. 
+where $J(b) = \frac{1}{2}||b||_2$ for Ridge and $J(b) = ||b||_1$ for Lasso.
 However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, thus these procedures do not provide $p$-values or confidence intervals}.
 
     \end{minipage}
@@ -93,7 +93,7 @@ However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, th
 
 \item \texttt{lassoscore \{lassoscore\}}: \textbf{Score test based on penalized regression}. Performs penalized regression of an outcome on all but a single feature, and test for correlation of the residuals with the held-out feature; applied on each feature in turn. 
 
-\item \texttt{hdi \{hdi\}}: \textbf{Multi sample-splitting}. Splits the sample into two equal halves, $I_1$ and $I_2$. First half $I_1$ is used for variable selection (with the use of Lasso) and the second half $I_2$, with the reduced set of selected variables (from $I_1$), is used for "classical" statistical inference in terms of $p$-values. Repeats this $B$ times and aggregate obtained p-values. 
+\item \texttt{hdi \{hdi\}}: \textbf{Multi sample-splitting}. Splits the sample into two equal halves, $I_1$ and $I_2$. First half $I_1$ is used for variable selection (with the use of Lasso) and the second half $I_2$, with the reduced set of selected variables (from $I_1$), is used for "classical" statistical inference in terms of $p$-values. Repeats the splitting procedure $B$ times and aggregates obtained p-values. 
 
 \item \texttt{grace.test \{Grace\}}: \textbf{Grace test}. Proposes how to overcome that Ridge is a biased estimator of $\beta$ and its estimation bias is negligible only if the Ridge tuning parameter $\lambda$ is close to zero. To construct a test statistic for the null hypothesis $H_0: \; \beta^*_j = 0$ for some $j \in \{1, ..., p\}$, it adjusts for the potential estimation bias by using a stochastic bound derived from an initial estimator. Since with this adjustment the tuning parameter $\lambda$ needs not be very small, coefficient estimation and corresponding $p$-values for penalized regression might be obtained.  
 
@@ -109,11 +109,13 @@ However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, th
     \begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Assessing the inference results.} In regression settings, False
-Discovery Rate (FDR) is often used to describe the  proportion of false "discoveries" (whose coefficients in the true {\it full model} are zero). However, when applying FDR to settings with the presence of correlated predictors, more than one variable is likely to be capturing the same underlying signal. \textcolor{red}{Then, "classical" FDR suffers from unintuitive and potentially undesirable behavior.}
+Discovery Proportion (FDP) is often used to describe the proportion of false "discoveries" (whose coefficients in the true {\it full model} are zero). However, in settings with the presence of correlated predictors, more than one variable is likely to be capturing the same underlying signal. \textcolor{red}{Then, "classical" FDP suffers from unintuitive and potentially undesirable behavior.}
 
 \begin{itemize}
 
-\item Here, we use \textbf{False Variable Rate (FVR)} measure ([x]), which considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. Mathematically, for a selected variables set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X}\beta$ from the {\it full model} onto subset of predictors $\mathbf{X}_A$ to obtain a projected mean $\mathbf{X}\beta^{(A)}$. We define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector. 
+\item Here, we use \textbf{False Variable Proportion (FVP)} measure ([x]), which considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. Mathematically, for a selected variables set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X}\beta$ from the {\it full model} onto subset of predictors $\mathbf{X}_A$ to obtain a projected mean $\mathbf{X}\beta^{(A)}$. We define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector: 
+$$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
+
 
 \end{itemize}
 
@@ -124,7 +126,8 @@ Discovery Rate (FDR) is often used to describe the  proportion of false "discove
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, right of=intro, node distance=40cm, yshift = -19cm] (fdrill){%
+\node [myboxwhite, right of=intro, node distance=40cm] (fdrill){%
+
   \begin{minipage}{0.48\textwidth}
   
 \includegraphics[width=38cm]{images/FVR-ill.png}
@@ -155,6 +158,33 @@ library(ggplot2)
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/utils.R")
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
+
+
+FVR.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
+  p <- length(beta.true)
+  A.plus.idx <- c(beta.sel.idx, p+1)
+  
+  Sigma.aug.11 <- Sigma
+  Sigma.aug.12 <- Sigma %*% beta.true
+  Sigma.aug.21 <- t(beta.true) %*% Sigma
+  Sigma.aug.22 <- t(beta.true) %*% Sigma %*% beta.true + error.sd^2
+  
+  Sigma.aug.1. <- cbind(Sigma.aug.11, Sigma.aug.12)
+  Sigma.aug.2. <- cbind(Sigma.aug.21, Sigma.aug.22)
+  Sigma.aug <- rbind(Sigma.aug.1., Sigma.aug.2.)
+  
+  Sigma.aug.A.plus <- Sigma.aug[A.plus.idx, A.plus.idx]
+  Sigma.aug.A.plus.inv <- solve(Sigma.aug.A.plus)
+  Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
+  return(round(Sigma.aug.A.plus.inv.Y, 4))
+}
+
+
+
+
+
+
+
 @
 
 <<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
@@ -195,58 +225,65 @@ plot(plt)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node [myboxwhite, below of=usageexample, node distance=1cm, yshift = -19cm] (usageexample2){%
+\node [myboxwhite, below of=usageexample, node distance=5cm, yshift = -19cm] (usageexample2){%
   \begin{minipage}{0.48\textwidth}
+  
+\small
+\textbf{FVR projected mean} Values euqal 0 indicate false discovery. 
+<<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+# source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/PVR_proj_mean.R")
 
-\textbf{Code example}. Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
+# Check how close to 0 ("false discovery") is actual true beta 
+(beta.sel.tmp <- which(beta != 0))
+FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
 
-<<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
-rm(list=ls())
-library(knitr)
-library(MASS)
-library(Matrix)
-library(lassoscore)
-library(hdi)
-library(Grace)
-library(glmnet)
-library(ggplot2)
-source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
-source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/utils.R")
-knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
+# Make change in vector of "discoveries" we check for falses 
+beta.sel.tmp <- c(c(7), beta.sel.tmp[-1])
+FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+
+# Make change in vector of "discoveries" we check for falses 
+beta.sel.tmp <- c(c(1, 2), beta.sel.tmp[-1])
+FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
 @
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
-base_size.gg <- 10
 
-# Parameters 
-p.tmp <- 200
-n.tmp <- 100
-sgnf.lvl <- 0.1
-beta.sgnf.n <- 10
+\textbf{$p-values$: Score test based on penalized regression} 
 
-# Simulate data
-set.seed(1)
-
-Sigma <- toeplitz.mat(p.tmp, 0.1) 
-X <- scale(mvrnorm(n.tmp, mu = rep(0, p.tmp), Sigma = Sigma))
-beta <- rep(0, p.tmp)
-beta[sample(1:p.tmp, beta.sgnf.n, replace = FALSE)] <- 1
-X.beta <- X %*% beta
-error.sd <- 1 
-Y <- scale(rnorm(n.tmp, mean = X.beta, sd = error.sd))
-
-# Plots
-vizu.mat(toeplitz.mat(p.tmp, 0.005) , "Sigma var-cov mat.", base_size = base_size.gg, geom_tile.colour = "white")
-vizu.mat(X, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
-plot.df <- data.frame(x = 1:p.tmp, y = beta)
-plt <- 
-  ggplot(plot.df, aes(x=x, y=y)) + 
-  geom_line() + 
-  labs(title = "true beta signal", x = "", y = "") + 
-  theme_bw(base_size = base_size.gg, base_family = "Helvetica") 
-plot(plt)
+<<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+cv.res <-  cv.glmnet(X, Y) # Run cv.glmnet to choose *exemplary* lambda for which we compute lassoscore
+res.lassoscore <- lassoscore(Y, X, lambda =  cv.res$lambda.1se) 
+beta.selected.idx <- which(res.lassoscore$p.model < 0.1) # subset of p.values < 0.1
 @
 
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+plot.discoveries(beta, beta.selected.idx)
+@
+
+
+\textbf{$p-values$: Multi sample-splitting} 
+
+<<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+res.hdi.multi <- hdi(X, Y, method = "multi.split", B = 50, model.selector = lasso.cv,
+                     args.model.selector = list(nfolds = 10))
+beta.selected.idx <- which(res.hdi.multi$pval.corr < 0.1)
+@
+
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+plot.discoveries(beta, beta.selected.idx)
+@
+
+
+\textbf{$p-values$: Grace test} 
+
+<<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+lambda.2.seq <- exp(seq(-6, 10, length.out = 100)) 
+res.grace <- grace.test(Y, X, L = matrix(0, p.tmp, p.tmp), lambda.L = 0, lambda.2 = lambda.2.seq)
+beta.selected.idx <- which(res.grace$pvalue < 0.1)
+@
+
+<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=2.5, fig.width=16, fig.show='hold'>>=
+plot.discoveries(beta, beta.selected.idx)
+@
 
 \end{minipage}
 };

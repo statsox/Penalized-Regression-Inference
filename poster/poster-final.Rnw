@@ -21,6 +21,7 @@
 \usepackage{mathtools}
 \usepackage{color}
 \usepackage{graphicx}
+\usepackage{hyperref}
 % Fonts
 \renewcommand{\familydefault}{\rmdefault}
 % For tikz
@@ -31,7 +32,7 @@
 
 \title{\Huge Penalized regression inference regarding variable selection in high dimensions: presentation of selected methods implemented in R}
 \date{}
-\author{{Marta Karas}\\ \Large Contact: \textcolor{blue}{http://statsox.github.io}}
+\author{{Marta Karas}\\ \Large Contact: \textcolor{blue}{http://statsox.github.io} | \textcolor{blue}{marta.karass@gmail.com}}
 
 \begin{document}
 % \SweaveOpts{concordance=TRUE}
@@ -44,7 +45,6 @@
 \tikzstyle{myboxblue} = [rectangle, fill=blue!10, rounded corners, inner sep=10pt, inner ysep=20pt]
 \tikzstyle{myboxviolet} = [rectangle, fill=violet!10, rounded corners, inner sep=0pt, inner ysep=0pt]
 \tikzstyle{myboxyellow} = [rectangle, fill=yellow!10, rounded corners, inner sep=10pt, inner ysep=20pt]
-\tikzstyle{fancytitle} = [fill=white, text=black, ellipse, draw=blue]
 
 \vspace{0cm}
 
@@ -54,57 +54,57 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxwhite] (intro){
-    \begin{minipage}{0.45\textwidth}
+\begin{minipage}{0.45\textwidth}
 
 {\bf Association between an outcome variable and predictors.} To assess the association between an outcome $y \in \mathbb{R}^n$ and a set of predictors $x_j \in \mathbb{R}^n$, $j = 1,...,p$, one might consider the model:
 $$\mathbf{y} =  \mathbf{X} \beta + \epsilon,$$ 
-where $\mathbf{X} = [\mathbf{x}_1, . . . , \mathbf{x}_p] \in \mathbb{R}^{n \times p}$, $\beta \in \mathbb{R}^p$ is vector of coefficients, and $\epsilon \in \mathbb{R}^n$ is a vector of errors with mean zero and constant variance. If  the number of variables $p$ is much smaller than $n$, we could perform a formal statistical test for whether an element of $\beta$ is zero using classical methods, such as likelihood ratio or Wald test. However, \textcolor{red}{in the high-dimensional setting, when the number of variables $p$ is large, these tests have low power, or are undefined}.
+where $\mathbf{X} = [\mathbf{x}_1, . . . , \mathbf{x}_p] \in \mathbb{R}^{n \times p}$, $\beta \in \mathbb{R}^p$ is vector of coefficients, and $\epsilon \in \mathbb{R}^n$ is a vector of errors with mean zero and constant variance. As pointed in [4], if  the number of variables $p$ is much smaller than $n$, we could perform a formal statistical test for whether an element of $\beta$ is zero using classical methods, such as likelihood ratio or Wald test. However, \textcolor{red}{in the high-dimensional setting, when the number of variables $p$ is large, these tests have low power, or are undefined}.
 
 {\bf Penalized regression techniques.} In the case where $p$ is large, penalized regression techniques such as Ridge and Lasso can be employed to obtain $\beta$ estimates:
 $$\widehat{\beta }_{\lambda} = \underset{b \in \mathbb{R}^p}{arg \; min}\left  \{ \frac{1}{2n} ||\mathbf{y - Xb}||^2_2 +\lambda J(b)\right  \},$$
 where $J(b) = \frac{1}{2}||b||_2$ for Ridge and $J(b) = ||b||_1$ for Lasso.
 However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, thus these procedures do not provide $p$-values or confidence intervals}.
 
-    \end{minipage}
+\end{minipage}
 };
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxblue, below=1cm of intro.south, anchor=north] (methods1){%
-    \begin{minipage}{0.45\textwidth}
+\begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Penalized regression inference.} Here, we present examples of usage of a few selected methods available in \texttt{R}:
 
 \begin{itemize}
 
-\item \texttt{lassoscore \{lassoscore\}}: \textbf{Score test based on penalized regression}. Performs penalized regression of an outcome on all but a single feature, and test for correlation of the residuals with the held-out feature; applied on each feature in turn. 
+\item \texttt{lassoscore \{lassoscore\}}: \textbf{Score test based on penalized regression} ([4]). Performs penalized regression of an outcome on all but a single feature, and test for correlation of the residuals with the held-out feature; applied on each feature in turn. 
 
-\item \texttt{hdi \{hdi\}}: \textbf{Multi sample-splitting}. Splits the sample into two equal halves, $I_1$ and $I_2$. First half $I_1$ is used for variable selection (with the use of Lasso) and the second half $I_2$, with the reduced set of selected variables (from $I_1$), is used for "classical" statistical inference in terms of $p$-values. Repeats the splitting procedure $B$ times and aggregates obtained p-values. 
+\item \texttt{hdi \{hdi\}}: \textbf{Multi sample-splitting} ([1,3]). Splits the sample into two equal halves, $I_1$ and $I_2$. First half $I_1$ is used for variable selection (with the use of Lasso) and the second half $I_2$, with the reduced set of selected variables (from $I_1$), is used for "classical" statistical inference in terms of $p$-values. Repeats the splitting procedure $B$ times and aggregates obtained p-values. 
 
-\item \texttt{grace.test \{Grace\}}: \textbf{Grace test}. Proposes how to overcome that Ridge is a biased estimator of $\beta$ and its estimation bias is negligible only if the Ridge tuning parameter $\lambda$ is close to zero. To construct a test statistic for the null hypothesis $H_0: \; \beta^*_j = 0$ for some $j \in \{1, ..., p\}$, it adjusts for the potential estimation bias by using a stochastic bound derived from an initial estimator. Since with this adjustment the tuning parameter $\lambda$ needs not be very small, coefficient estimation and corresponding $p$-values for penalized regression might be obtained.  
+\item \texttt{grace.test \{Grace\}}: \textbf{Grace test} ([5]). Proposes how to overcome that Ridge is a biased estimator of $\beta$ and its estimation bias is negligible only if the Ridge tuning parameter $\lambda$ is close to zero. To construct a test statistic for the null hypothesis $H_0: \; \beta^*_j = 0$ for some $j \in \{1, ..., p\}$, it adjusts for the potential estimation bias by using a stochastic bound derived from an initial estimator. Since with this adjustment the tuning parameter $\lambda$ needs not be very small, coefficient estimation and corresponding $p$-values for penalized regression might be obtained.  
 
 \end{itemize}
 
-  \end{minipage}
+\end{minipage}
 };
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxviolet, below=1cm of methods1.south, anchor=north] (methods2){%
-    \begin{minipage}{0.45\textwidth}
+\begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Assessing the inference results.} In regression settings, False
 Discovery Proportion (FDP) is often used to describe the proportion of false "discoveries" (whose coefficients in the true {\it full model} are zero). However, in settings with the presence of correlated predictors, more than one variable is likely to be capturing the same underlying signal. \textcolor{red}{Then, "classical" FDP suffers from unintuitive and potentially undesirable behavior.}
 
 \begin{itemize}
 
-\item Here, we use \textbf{False Variable Proportion (FVP)} measure ([x]), which considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. Mathematically, for a selected variables set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X}\beta$ from the {\it full model} onto subset of predictors $\mathbf{X}_A$ to obtain a projected mean $\mathbf{X}\beta^{(A)}$. We define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector: 
+\item Here, we use \textbf{False Variable Proportion (FVP)} measure ([2]), which considers a variable to be an interesting selection if it captures signal that has not been explained by any other variable in the selected model. Mathematically, for a selected variables set $A \subseteq  \{1, . . . , p\}$, we project the mean $\mathbf{X}\beta$ from the {\it full model} onto subset of predictors $\mathbf{X}_A$ to obtain a projected mean $\mathbf{X}\beta^{(A)}$. We define a selected variable to be a false selection if it has a zero coefficient in this projected mean vector: 
 $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
 
 \end{itemize}
 
-  \end{minipage}
+\end{minipage}
 };
 
 
@@ -117,28 +117,29 @@ $$FVP =|  \{ j \in A: \beta_j^{(A)} = 0 \} |/|A|.$$
   
 \includegraphics[width=1.0\textwidth]{images/FVR-ill.png}
 \small
-Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: X. 
+Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are denoted as correct selections if they are capturing unique signal among the selected variables. Thus $B_2$ is correctly selected in the first set. However, $B_2$ is considered a false selection in the second set because it adds no information beyond $B_1$. Figure \& caption source: [2], p. 4. 
 
 \end{minipage}
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxviolet, below=1cm of fvillustration.south, anchor=north] (fvnote){%
-  \begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.48\textwidth}
     
 {\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.2$).  
 
-  \end{minipage}
+\end{minipage}
 };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxwhite, below=1cm of fvnote.south, anchor=north] (usageexample){%
-  \begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.48\textwidth}
 
 \textbf{\texttt{R} usage examples.} Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
 
 <<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
 rm(list=ls())
+
 library(knitr)
 library(MASS)
 library(Matrix)
@@ -152,11 +153,10 @@ source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/false_variable_fw.R")
 
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
-
 @
 
 
-<<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
+<<eval=TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 base_size.gg <- 10
 
 # Parameters 
@@ -189,7 +189,6 @@ plt <-
 plot(plt)
 
 # Y ~ X %*% beta plot 
-# vizu.mat(, "X data mat.", base_size = base_size.gg, geom_tile.colour = "white")
 plot.df <- data.frame(x = X.beta, y = Y)
 plt <- 
   ggplot(plot.df, aes(x=x, y=y)) + 
@@ -199,14 +198,13 @@ plt <-
 plot(plt)
 @
 
-
 \end{minipage}
 };
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \node [myboxwhite, below of=usageexample, node distance=35cm] (usageexample2){%
-  \begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.48\textwidth}
   
 \small
 
@@ -244,6 +242,7 @@ plot.discoveries(beta, beta.sel.idx)
 FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 @
 
+
 \texttt{R}: $p$-values \& FVP: \textbf{Multi sample-splitting} 
 
 <<eval=TRUE, echo = TRUE, cache = TRUE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
@@ -259,6 +258,7 @@ plot.discoveries(beta, beta.sel.idx)
 <<eval=TRUE, echo = TRUE, cache = TRUE>>=
 FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 @
+
 
 \texttt{R}: $p$-values \& FVP: \textbf{Grace test} 
 
@@ -279,6 +279,38 @@ FVP(beta.true = beta, beta.sel.idx = beta.sel.idx, Sigma = Sigma, thresh = 0.2)
 \end{minipage}
 };
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node [myboxwhite, below=0.5cm of usageexample2.south, anchor=north] (references){%
+\begin{minipage}{0.48\textwidth}
+    
+{\bf Reference.} 
+
+\small
+
+\begin{enumerate}
+
+\item Dezeure, R., Buehlmann, P., Meier, L., Meinshausen, N. (2015). High-Dimensional Inference: Confidence Intervals, p-Values and R-Software hdi. Statistical Science, 30(4): 533-558. 
+\item Grazier G'Sell, M., Hastie, T., Tibshirani, R. (2013). False Variable Selection Rates in Regression. 
+\item Meinshausen, N., Meier, L. and Buehlmann, P. (2009) P-values for high-dimensional regression. Journal of the American Statistical Association, 104: 1671-1681.
+\item Voorman, A., Shojaie, A., Witten, D. (2014). Inference in High Dimensions with the Penalized Score Test.
+\item Zhao, S., Shojaie, A. (2015). A Significance Test for Graph-Constrained Estimation.
+
+\end{enumerate}
+
+\end{minipage}
+};
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node [myboxwhite, below=1cm of references.south, anchor=north, line width=1mm, draw=blue!80, fill=yellow!50] (latexnote){%
+  \begin{minipage}{0.48\textwidth}
+    
+\center
+
+This is a 100\% reproducible poster made with \texttt{R} and \texttt{Sweave}, weaved with \texttt{knitr}, based on \texttt{LaTeX/tikz} layout. Inspired by \href{http://ropengov.github.io/r/poster/latex/sweave/tikz/2015/06/07/ICCSS/}{\textbf{rOpenGov}}. 
+
+\end{minipage}
+};
 
 
 

@@ -157,10 +157,12 @@ library(glmnet)
 library(ggplot2)
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/vizumat.R")
 source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/utils.R")
+source("https://raw.githubusercontent.com/statsox/Penalized-Regression-Inference/master/R/false_variable_fw.R")
+
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F, cache = T, fig = TRUE, global.par = TRUE)
 
 
-FVR.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
+FVP.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
   p <- length(beta.true)
   A.plus.idx <- c(beta.sel.idx, p+1)
   
@@ -178,14 +180,8 @@ FVR.proj.mean <- function(beta.true, beta.sel.idx, Sigma, error.sd = 1){
   Sigma.aug.A.plus.inv.Y <- Sigma.aug.A.plus.inv[(length(A.plus.idx)),]
   return(round(Sigma.aug.A.plus.inv.Y, 4))
 }
-
-
-
-
-
-
-
 @
+
 
 <<eval=TRUE, echo = FALSE, cache = FALSE, fig=TRUE, fig.height=4, fig.width=5, fig.show='hold'>>=
 base_size.gg <- 10
@@ -235,15 +231,15 @@ plot(plt)
 
 # Check how close to 0 ("false discovery") is actual true beta 
 (beta.sel.tmp <- which(beta != 0))
-FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
 
 # Make change in vector of "discoveries" we check for falses 
 beta.sel.tmp <- c(c(7), beta.sel.tmp[-1])
-FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
 
 # Make change in vector of "discoveries" we check for falses 
 beta.sel.tmp <- c(c(1, 2), beta.sel.tmp[-1])
-FVR.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
+FVP.proj.mean(beta.true = beta, beta.sel.idx = beta.sel.tmp, Sigma = Sigma)
 @
 
 

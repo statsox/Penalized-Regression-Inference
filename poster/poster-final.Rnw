@@ -62,8 +62,8 @@ where $\mathbf{X} = [\mathbf{x}_1, . . . , \mathbf{x}_p] \in \mathbb{R}^{n \time
 
 {\bf Penalized regression techniques.} In the case where $p$ is large, penalized regression techniques such as Ridge and Lasso can be employed to obtain $\beta$ estimates:
 $$\widehat{\beta }_{\lambda} = \underset{b \in \mathbb{R}^p}{arg \; min}\left  \{ \frac{1}{2n} ||\mathbf{y - Xb}||^2_2 +\lambda J(b)\right  \},$$
-where $J(b) = \frac{1}{2}||b||_2$ for Ridge and $J(b) = ||b||_1$ for Lasso.
-However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, thus these procedures do not provide $p$-values or confidence intervals}.
+where $J(b) = \frac{1}{2}||b||_2^2$ for Ridge and $J(b) = ||b||_1$ for Lasso.
+However, \textcolor{red}{these procedures do not provide $p$-values or confidence intervals} ([4]).
 
 \end{minipage}
 };
@@ -95,7 +95,7 @@ However, \textcolor{red}{Lasso and Ridge yield biased estimators of  $\beta$, th
 \begin{minipage}{0.45\textwidth}
 
 {\bf Methods. Assessing the inference results.} In regression settings, False
-Discovery Proportion (FDP) is often used to describe the proportion of false "discoveries" (whose coefficients in the true {\it full model} are zero). However, in settings with the presence of correlated predictors, more than one variable is likely to be capturing the same underlying signal. \textcolor{red}{Then, "classical" FDP suffers from unintuitive and potentially undesirable behavior.}
+Discovery Proportion (FDP) is often used to describe the proportion of false "discoveries" (whose coefficients in the true {\it full model} are zero). However, in settings with the presence of correlated predictors, more than one variable is likely to be capturing the same underlying signal. \textcolor{red}{Then, "classical" FDP suffers from unintuitive and potentially undesirable behavior} ([2]).
 
 \begin{itemize}
 
@@ -126,7 +126,7 @@ Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are d
 \node [myboxviolet, below=1cm of fvillustration.south, anchor=north] (fvnote){%
 \begin{minipage}{0.48\textwidth}
     
-{\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector and heuristics is used to define threshold below which a variable is considered to be a false selection (here: $0.2$).  
+{\it False Variable Proportion application.} In non-orthogonal settings, one is not likely to obtain exact zeros in a projected mean $\mathbf{X}\beta^{(A)}$ vector. Here, we use heuristics to define threshold below which a variable is considered to be a false selection (exemplary value used: $0.2$).  
 
 \end{minipage}
 };
@@ -135,7 +135,7 @@ Figure 1. \textbf{False Variable Proportion (FVP)} illustration. Variables are d
 \node [myboxwhite, below=1cm of fvnote.south, anchor=north] (usageexample){%
 \begin{minipage}{0.48\textwidth}
 
-\textbf{\texttt{R} usage examples.} Assume we are given data matrix $X_{100 \times 300} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
+\textbf{\texttt{R} usage examples.} Assume we are given data matrix $X_{100 \times 200} \sim N(0, \Sigma )$, true signal $\beta$ and observed response variable $Y \sim N(X \beta, 1^2)$.
 
 <<eval=TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE, include = FALSE>>=
 rm(list=ls())

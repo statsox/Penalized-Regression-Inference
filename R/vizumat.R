@@ -77,8 +77,7 @@ vizu.mat <- function(matrix.object, title = "", base_size = 12,
   # Define plot base
   plot.tmp <- 
     ggplot(matrix.object.m, aes(Var2, Var1)) + 
-    # geom_tile(ggplot2::aes(fill = value), colour = geom_tile.colour) + 
-    geom_tile(ggplot2::aes(fill = value)) + 
+    geom_tile(ggplot2::aes(fill = value), colour = geom_tile.colour) + 
     labs(x = "", y = "", title = title) + 
     theme_grey(base_size = base_size)
   #     theme_grey(base_size = base_size) + 
